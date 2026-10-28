@@ -1,0 +1,16 @@
+apiVersion: v1
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>OpenShift Test Web</title>
+      </head>
+      <body>
+        <h1>Test Web Service is Running</h1>
+        <p>HTTP availability monitoring target</p>
+      </body>
+    </html>
+kind: ConfigMap
+metadata:
+  name: web-content
