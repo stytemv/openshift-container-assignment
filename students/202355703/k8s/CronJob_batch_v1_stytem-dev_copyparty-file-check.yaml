@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: copyparty-file-check
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app: copyparty
+                  topologyKey: kubernetes.io/hostname
+          containers:
+            - name: file-check
+              image: busybox:1.36
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "=== File integrity scan started ==="
+                  date
+                  find /data -type f -exec sha256sum {} \;
+                  echo "=== File integrity scan completed ==="
+              volumeMounts:
+                - name: file-storage
+                  mountPath: /data
+                  readOnly: true
+          volumes:
+            - name: file-storage
+              persistentVolumeClaim:
+                claimName: file-data

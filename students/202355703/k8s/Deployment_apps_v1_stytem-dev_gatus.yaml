@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatus
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: gatus
+    spec:
+      containers:
+        - name: gatus
+          image: ghcr.io/twin/gatus:stable
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          env:
+            - name: GATUS_CONFIG_PATH
+              value: /config/config.yaml
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: gatus-config
+              mountPath: /config/config.yaml
+              subPath: config.yaml
+              readOnly: true
+      volumes:
+        - name: gatus-config
+          configMap:
+            name: gatus-config

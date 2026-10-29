@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatus-config
+data:
+  config.yaml: |
+    storage:
+      type: memory
+
+    endpoints:
+      - name: Copyparty File Service
+        group: OpenShift Services
+        url: "http://copyparty:3923/"
+        interval: 30s
+        conditions:
+          - "[STATUS] == 200"
+          - "[RESPONSE_TIME] < 2000"
