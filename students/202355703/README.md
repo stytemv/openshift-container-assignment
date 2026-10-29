@@ -7,9 +7,13 @@
 
 ## 1. 서비스 소개
 
-웹 브라우저를 통해 파일을 업로드하고 다운로드할 수 있는 Copyparty 파일 서버를 OpenShift에 배포하고, Gatus로 서비스 상태를 감시하며 CronJob으로 저장 파일의 SHA-256 해시를 주기적으로 기록하는 시스템을 구현했다.
+웹 브라우저를 통해 파일을 업로드하고 다운로드할 수 있는 Copyparty 파일 공유 서비스를 OpenShift에 배포하였다.
+또한 Gatus를 이용하여 서비스 상태를 모니터링하고, CronJob을 통해 저장된 파일의 SHA-256 해시를 주기적으로 기록하는 시스템을 구현하였다.
 
-단순한 웹페이지를 제공하는 것을 넘어, 실제 파일 데이터를 저장하고 서비스의 상태를 관찰할 수 있도록 여러 Kubernetes/OpenShift Object를 조합하는 것을 목표로 했다. 
+파일 공유 서비스는 사용자가 직접 파일을 업로드하고 다운로드하면서 정상 동작 여부를 확인할 수 있고, 영구 저장 공간의 필요성도 명확하게 보여줄 수 있다는 점에서 주제로 선정하였다.
+
+이번 과제에서는 단순히 하나의 웹 서비스를 배포하는 것에 그치지 않고, 파일 저장과 사용자 인증, 서비스 상태 감시 및 정기적인 파일 검사를 함께 구현하고자 하였다. 이를 위해 여러 Kubernetes/OpenShift Object를 조합하여 활용하였다.
+
 사용된 컨테이너 이미지는 모두 공개 이미지를 활용하였으며, 별도의 소스코드를 작성하거나 컨테이너 이미지를 직접 빌드하지는 않았다.
 
 ### 주요 기능
@@ -24,12 +28,13 @@
 ## 2. 사용한 컨테이너 이미지
 
 | 이미지                              | 용도                    | 포트 / 선택 이유 |
-
+|---|---|---|
 | `ghcr.io/9001/copyparty-ac:latest` | 파일 공유 서버           | `3923/TCP`; 웹 UI 및 파일 업로드·다운로드 제공, 실제 Sandbox에서 실행 확인 |
 | `ghcr.io/twin/gatus:stable`        | 서비스 상태 모니터링      | `8080/TCP`; HTTP 상태 검사 |
 | `busybox:1.36`                     | 파일 해시 계산용 임시 Pod | `find`, `sha256sum` 실행 후 종료되는 경량 이미지 |
 
 ## 3. 시스템 아키텍처
+![시스템 아키텍처](images/Architecture.png)
 
 사용자 요청과 내부 모니터링은 다음과 같이 처리된다.
 
@@ -44,7 +49,7 @@
 ### 사용한 Kubernetes / OpenShift Object
 
 | Object                            | 이름                  | 역할과 주요 설정 |
-
+|---|---|---|
 | Deployment                        | `copyparty`           | Copyparty Pod 1개 유지, `Recreate` 배포 전략, Liveness/Readiness Probe |
 | Service                           | `copyparty`           | `ClusterIP`, TCP 3923, Copyparty Pod 연결 |
 | Route                             | `copyparty`           | 외부 HTTPS 접속 제공 |
@@ -129,8 +134,6 @@ oc logs job/manual-file-check
 
 기존 프로젝트와 독립된 새로운 환경에서 저장소의 YAML 파일만으로 모든 리소스가 정상적으로 생성되는 것을 확인하였으며, Copyparty와 Gatus의 실행 및 CronJob의 동작까지 검증하였다.
 
-| 검증 항목 | 확인 결과 |
-
 아래 이미지는 별도 Sandbox에서 실제로 확인한 화면이다.
 
 ### 5.1 OpenShift 배포 상태
@@ -181,7 +184,7 @@ OpenShift의 TLS edge Route 뒤에서는 실제 클라이언트 요청에 대한
 students/202355703/
 ├── README.md
 ├── images/
-│   ├── architecture.png
+│   ├── Architecture.png
 │   ├── 01-topology.png
 │   ├── 02-copyparty.png
 │   ├── 03-gatus.png
